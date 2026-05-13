@@ -1,46 +1,102 @@
 import { useState } from "react"
+import "./App.css"
 
-export interface Todo{
-  id: string,
-  title: string,
+export interface Todo {
+  id: string
+  title: string
   isComplete: boolean
 }
 
 function App() {
-
-  const [currentValue, setCurrentValue] = useState('');
+  const [inputValue, setInputValue] = useState("")
   const [todos, setTodos] = useState<Todo[]>([])
 
-  function handleClickAddButton () {
-    todos.push({ id: `${Date.now()}`, title: currentValue, isComplete: false});
-    const newArray = [...todos];
-    setTodos(newArray)
-    setCurrentValue('');
+  const handleAddTodo = () => {
+    if (inputValue.trim() === "") return
+
+    const newTodo: Todo = {
+      id: `${Date.now()}`,
+      title: inputValue,
+      isComplete: false,
+    }
+
+    setTodos([...todos, newTodo])
+    setInputValue("")
   }
 
-  function handleRemove(id: string) {
-    const result = todos.filter(e => e.id !== id);
-    setTodos(result)
+  const handleToggleTodo = (id: string) => {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, isComplete: !todo.isComplete } : todo
+      )
+    )
   }
+
+  const handleRemoveTodo = (id: string) => {
+    setTodos(todos.filter((todo) => todo.id !== id))
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleAddTodo()
+    }
+  }
+
+  const completedCount = todos.filter((t) => t.isComplete).length
 
   return (
-    <div>
-        <div>
-           <input
-            onChange={(e) => setCurrentValue(e.target.value)}
-            value={currentValue}
+    <div className="app-container">
+      <div className="app-card">
+        <header className="app-header">
+          <h1>My Tasks</h1>
+          <p className="task-count">
+            {completedCount} of {todos.length} completed
+          </p>
+        </header>
+
+        <div className="input-section">
+          <input
             type="text"
-            placeholder='Enter your todo here' />
-           <button onClick={handleClickAddButton}>Add</button>
+            className="todo-input"
+            placeholder="Add a new task..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+          />
+          <button className="add-button" onClick={handleAddTodo}>
+            Add
+          </button>
         </div>
-       <ul>
-        {todos.map(e => (
-          <>
-            <li key={e.id}>{e.title}</li>
-            <button onClick={() => handleRemove(e.id)}>Remove</button>
-          </>
-          ))}
-       </ul>
+
+        {todos.length === 0 ? (
+          <div className="empty-state">
+            <p>No tasks yet. Add one to get started! 🚀</p>
+          </div>
+        ) : (
+          <ul className="todos-list">
+            {todos.map((todo) => (
+              <li key={todo.id} className="todo-item">
+                <input
+                  type="checkbox"
+                  className="todo-checkbox"
+                  checked={todo.isComplete}
+                  onChange={() => handleToggleTodo(todo.id)}
+                />
+                <span className={`todo-text ${todo.isComplete ? "completed" : ""}`}>
+                  {todo.title}
+                </span>
+                <button
+                  className="delete-button"
+                  onClick={() => handleRemoveTodo(todo.id)}
+                  title="Delete task"
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }
